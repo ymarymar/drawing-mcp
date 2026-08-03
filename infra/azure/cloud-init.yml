@@ -1,0 +1,33 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - ufw
+
+runcmd:
+  - curl -fsSL https://get.docker.com | sh
+  - usermod -aG docker ${admin_username}
+  - curl -1sLf 'https://dl.cloudflare.com/carlista/caddy/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  - curl -1sLf 'https://dl.cloudflare.com/carlista/caddy/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+  - apt update
+  - apt install -y caddy
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow ssh
+  - ufw allow 80/tcp
+  - ufw allow 443/tcp
+  - ufw --force enable
+  - mkdir -p /var/log/caddy
+  - chown caddy:caddy /var/log/caddy
+  - |
+    cat > /root/drawing-mcp.env << 'EOF'
+    ANTHROPIC_API_KEY=replace_me
+    API_KEY=replace_me
+    PORT=3000
+    EOF
+  - chmod 600 /root/drawing-mcp.env

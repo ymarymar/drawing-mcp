@@ -1,0 +1,38 @@
+yourdomain.com {
+    rate_limit {remote.ip} 20r/m
+
+    @allowed_methods {
+        method POST GET
+        path /mcp /mcp/*
+    }
+
+    @blocked {
+        not @allowed_methods
+    }
+    respond @blocked 405
+
+    reverse_proxy localhost:3000 {
+        transport http {
+            dial_timeout 5s
+            response_header_timeout 30s
+        }
+        health_uri /health
+        health_interval 30s
+    }
+
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy no-referrer
+        -Server
+    }
+
+    log {
+        output file /var/log/caddy/drawing-mcp.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+        format json
+        level INFO
+    }
+}
